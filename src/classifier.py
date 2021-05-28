@@ -1,6 +1,7 @@
 from PIL import Image
 import numpy as np
-from cnn1.cnn1 import fetch_data, make_model, train, IMAGE_SIZE, NUM_CLASSES, load_and_predict
+from cnn1.cnn1 import fetch_data, IMAGE_SIZE, NUM_CLASSES, load_and_predict #, train , make_model 
+from cnn2.cnn2 import make_model, train
 
 # Fetch 'gtsrb' dataset and prepare data
 data = fetch_data("data/gtsrb")

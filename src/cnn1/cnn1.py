@@ -220,7 +220,7 @@ def fetch_data(path="data/gtsrb"):
 
     testset_length = [i for i,_ in enumerate(test_set)][-1] + 1
     #print('Number of batches: ', testset_length)
-    return train_set, val_set, test_set
+    return train_set, val_set, test_set, dataset_length
 
 #################################### Model ####################################
 
@@ -261,7 +261,7 @@ def make_model(class_count, img_size, channels=3):
 ################################# Train Model #################################
 
 def train(in_model, data, model_file='models/cnn1'):
-    train_set, val_set, test_set = data
+    train_set, val_set, test_set, dataset_length = data
     if not os.path.exists(model_file):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
@@ -278,7 +278,7 @@ def train(in_model, data, model_file='models/cnn1'):
     else:
         in_model = tf.keras.models.load_model(model_file)
         print("[INFO] Loaded Trained Model")
-        #in_model.evaluate(test_set, verbose=1)
+        in_model.evaluate(test_set, verbose=1)
     return in_model
 
 ###############################################################################
