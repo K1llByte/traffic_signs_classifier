@@ -18,6 +18,9 @@ import IPython.display as display
 
 BATCH_SIZE = 32
 IMAGE_SIZE = 32
+class_ids = np.array(['00000','00001', '00002', '00003', '00004', '00005', '00006', '00007'])
+class_names = ['Limit 20', 'Limit 30', 'Limit 50', 'Limit 60', 'Limit 70', 'Limit 80', 'Limit 100', 'Limit 120']
+NUM_CLASSES = len(class_ids)
 
 ############################## Auxiliar Functions #############################
 
@@ -34,7 +37,7 @@ def show_batch(cols, image_batch, label_batch):
     fig=plt.figure()
     for n in range(BATCH_SIZE):
         
-        subplot_title=("class "+ class_names[label_batch[n]==1][0])
+        subplot_title=("class "+ class_ids[label_batch[n]==1][0])
         axes.ravel()[n].set_title(subplot_title)  
         axes.ravel()[n].imshow(image_batch[n])
         axes.ravel()[n].axis('off')
@@ -126,9 +129,9 @@ def plot_image(i, predictions_array, true_label, img):
   else:
     color = 'red'
 
-  plt.xlabel("{} {:2.0f}% ({})".format(class_names[predicted_label],
+  plt.xlabel("{} {:2.0f}% ({})".format(class_ids[predicted_label],
                                 100*np.max(predictions_array),
-                                class_names[true_label]),
+                                class_ids[true_label]),
                                 color=color)
 
 def plot_value_array(i, predictions_array, true_label):
@@ -157,7 +160,6 @@ def plot_predictions(predictions, ground_truth, images, num_rows= 5, num_cols=3 
     plt.show()
 
 
-class_names = np.array(['00000','00001', '00002', '00003', '00004', '00005', '00006', '00007'])
 
 def decode_img(img):
     # convert the compressed string to a 3D uint8 tensor
@@ -172,7 +174,7 @@ def get_bytes_and_label(file_path):
         # convert the path to a list of path components
         parts = tf.strings.split(file_path, os.path.sep)
         # The second to last is the class-directory
-        return parts[-2] == class_names
+        return parts[-2] == class_ids
 
     label = get_label(file_path)
     # load the raw data from the file as a string
@@ -224,7 +226,7 @@ def fetch_data(path="data/gtsrb"):
 
 ################################ Define Model #################################
 
-def make_model(class_count, img_size, channels):
+def make_model(class_count, img_size, channels=3):
     model = Sequential()
     
     model.add(Conv2D(64, (5, 5), 
@@ -250,43 +252,44 @@ def make_model(class_count, img_size, channels):
 
     model.add(Dense(class_count, activation='softmax'))
 
-    model.compile(optimizer=Adam(lr=0.0001), loss='categorical_crossentropy', metrics=['accuracy'])
+    model.compile(
+        optimizer=Adam(lr=0.0001), 
+        loss='categorical_crossentropy',
+        metrics=['accuracy'])
     return model
 
-# modelV3 = make_model(8, IMAGE_SIZE, 3)
+################################# Train Model #################################
 
-# ################################# Train Model #################################
-
-def train(in_model, data):
-    MODEL_FILE = 'models/'
-    if not os.path.exists(MODEL_FILE):
-        modelV3.fit(train_set,
+def train(in_model, data, model_file='models/cnn1'):
+    train_set, val_set, test_set = data
+    if not os.path.exists(model_file):
+        print("[INFO] Training Model ...")
+        in_model.fit(train_set,
                     steps_per_epoch=dataset_length/BATCH_SIZE,
                     epochs=20, 
                     validation_data=val_set, 
                     validation_steps=2580/BATCH_SIZE)
+        print("[INFO] Training Finished")
 
-
-        eval = model.evaluate(test_set, verbose=2)
-        print(evalV3)
-        modelV3.save(MODEL_FILE)
+        eval_model = in_model.evaluate(test_set, verbose=1)
+        print(eval_model)
+        in_model.save(model_file)
+        
     else:
-        modelV3 = tf.keras.models.load_model(MODEL_FILE)
+        in_model = tf.keras.models.load_model(model_file)
+        print("[INFO] Loaded Trained Model")
+        #in_model.evaluate(test_set, verbose=1)
+    return in_model
 
-# modelV3.fit(train_set, steps_per_epoch=dataset_length/BATCH_SIZE, epochs=20)
+###############################################################################
 
+def load_and_predict(in_model, img_path):
+    img = Image.open(img_path).resize((IMAGE_SIZE,IMAGE_SIZE))
+    numpy_image = np.asarray(img)
 
-# evalV3 = modelV3.evaluate(test_set, verbose=2)
-# print(evalV3)
+    # Expand to include batch info
+    numpy_image = np.expand_dims(numpy_image, axis=0)
 
-# ###############################################################################
-
-# im = Image.open("new_50_1.jpg").resize((IMAGE_SIZE,IMAGE_SIZE))
-# numpy_image = np.asarray(im)
-
-# # Expand to include batch info
-# numpy_image = np.expand_dims(numpy_image, axis=0)
-
-# # Predict
-# in_pred = modelV3.predict(numpy_image)
-# print(in_pred)
+    # Predict
+    pred = in_model.predict(numpy_image)
+    return class_names[np.argmax(pred[0])]
