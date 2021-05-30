@@ -3,6 +3,7 @@ from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.layers import LeakyReLU, BatchNormalization, Conv2D, MaxPooling2D, Dense, Activation, Flatten, Dropout
 from tensorflow.keras.regularizers import l2
 import tensorflow.keras.layers as kl
+import tensorflow as tf
 import os
 
 BATCH_SIZE = 32
