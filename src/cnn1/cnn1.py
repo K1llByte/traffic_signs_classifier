@@ -26,10 +26,12 @@ NUM_CLASSES = len(class_ids)
 
 def decode_img(img):
     # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_png(img, channels=3)
+    img = tf.image.decode_image(img, channels=3) # decode_png
     # Use `convert_image_dtype` to convert to floats in the [0,1] range.
     img = tf.image.convert_image_dtype(img, tf.float32)
     # resize the image to the desired size.
+    img = tf.ensure_shape(img, [None, None, 3])
+
     return tf.image.resize(img, [IMAGE_SIZE,IMAGE_SIZE])
 
 def get_bytes_and_label(file_path):
@@ -66,27 +68,32 @@ def fetch_data(path="data/gtsrb_full"):
     test_listset = tf.data.Dataset.list_files(f"{path}test_images/*/*.*")
     test_set = test_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
 
-    dataset_length = [i for i,_ in enumerate(train_set)][-1] + 1
+    print("AAAAAAAAAAAAAAAAAAAAAAA",train_set)
+
+    tmp = [i for i,_ in enumerate(train_set)]
+    trainset_length = tmp[-1] + 1
+    # trainset_length = [i for i,_ in enumerate(train_set)][-1] + 1
 
     ############################### Prepare Dataset ################################
 
     train_set = train_set.cache()
-    train_set = train_set.shuffle(buffer_size=10200)
+    train_set = train_set.shuffle() # buffer_size=10200
     train_set = train_set.batch(batch_size=BATCH_SIZE)
     train_set = train_set.prefetch(buffer_size=AUTOTUNE)
     train_set = train_set.repeat()
 
     val_set = val_set.cache()
-    val_set = val_set.shuffle(buffer_size = 2580)
+    val_set = val_set.shuffle() # buffer_size = 2580
     val_set = val_set.batch(batch_size = BATCH_SIZE)
     val_set = val_set.prefetch(buffer_size = AUTOTUNE)
     val_set = val_set.repeat()
 
     test_set = test_set.batch(batch_size = BATCH_SIZE)
 
+
     testset_length = [i for i,_ in enumerate(test_set)][-1] + 1
     #print('Number of batches: ', testset_length)
-    return train_set, val_set, test_set, dataset_length
+    return train_set, val_set, test_set, trainset_length
 
 #################################### Model ####################################
 
@@ -127,11 +134,11 @@ def make_model(class_count, img_size, channels=3):
 ################################# Train Model #################################
 
 def train(in_model, data, model_file='models/cnn1'):
-    train_set, val_set, test_set, dataset_length = data
+    train_set, val_set, test_set, trainset_length = data
     if not os.path.exists(model_file):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
-                    steps_per_epoch=dataset_length/BATCH_SIZE,
+                    steps_per_epoch=trainset_length/BATCH_SIZE,
                     epochs=20, 
                     validation_data=val_set, 
                     validation_steps=2580/BATCH_SIZE)
