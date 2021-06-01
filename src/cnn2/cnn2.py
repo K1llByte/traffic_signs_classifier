@@ -66,7 +66,7 @@ def train(in_model, data, model_file='models/cnn2'):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
                     steps_per_epoch=dataset_length/BATCH_SIZE,
-                    epochs=100, 
+                    epochs=20,
                     validation_data=val_set, 
                     validation_steps=2580/BATCH_SIZE)
         print("[INFO] Training Finished")

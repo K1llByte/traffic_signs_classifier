@@ -26,11 +26,12 @@ NUM_CLASSES = len(class_ids)
 
 def decode_img(img):
     # convert the compressed string to a 3D uint8 tensor
-    img = tf.image.decode_image(img, channels=3) # decode_png
+    img = tf.image.decode_png(img, channels=3)
     # Use `convert_image_dtype` to convert to floats in the [0,1] range.
     img = tf.image.convert_image_dtype(img, tf.float32)
     # resize the image to the desired size.
-    img = tf.ensure_shape(img, [None, None, 3])
+    
+    #img = tf.ensure_shape(img, [None, None, 3])
 
     return tf.image.resize(img, [IMAGE_SIZE,IMAGE_SIZE])
 
@@ -58,17 +59,14 @@ def fetch_data(path="data/gtsrb_full"):
 
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
-    train_listset = tf.data.Dataset.list_files(f"{path}train_images/*/*.*")
-    print(type(train_listset))
+    train_listset = tf.data.Dataset.list_files(f"{path}train_images/*/*.png")
     train_set = train_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
 
-    val_listset = tf.data.Dataset.list_files(f"{path}val_images/*/*.*")
+    val_listset = tf.data.Dataset.list_files(f"{path}val_images/*/*.png")
     val_set = val_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
 
-    test_listset = tf.data.Dataset.list_files(f"{path}test_images/*/*.*")
+    test_listset = tf.data.Dataset.list_files(f"{path}test_images/*/*.png")
     test_set = test_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
-
-    print("AAAAAAAAAAAAAAAAAAAAAAA",train_set)
 
     tmp = [i for i,_ in enumerate(train_set)]
     trainset_length = tmp[-1] + 1
@@ -76,14 +74,17 @@ def fetch_data(path="data/gtsrb_full"):
 
     ############################### Prepare Dataset ################################
 
+    train_set_len = tf.data.experimental.cardinality(train_set).numpy()
+    val_set_len = tf.data.experimental.cardinality(val_set).numpy()
+    
     train_set = train_set.cache()
-    train_set = train_set.shuffle() # buffer_size=10200
+    train_set = train_set.shuffle(buffer_size=train_set_len)
     train_set = train_set.batch(batch_size=BATCH_SIZE)
     train_set = train_set.prefetch(buffer_size=AUTOTUNE)
     train_set = train_set.repeat()
 
     val_set = val_set.cache()
-    val_set = val_set.shuffle() # buffer_size = 2580
+    val_set = val_set.shuffle(buffer_size=val_set_len)
     val_set = val_set.batch(batch_size = BATCH_SIZE)
     val_set = val_set.prefetch(buffer_size = AUTOTUNE)
     val_set = val_set.repeat()
@@ -139,7 +140,7 @@ def train(in_model, data, model_file='models/cnn1'):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
                     steps_per_epoch=trainset_length/BATCH_SIZE,
-                    epochs=20, 
+                    epochs=20,
                     validation_data=val_set, 
                     validation_steps=2580/BATCH_SIZE)
         print("[INFO] Training Finished")
