@@ -19,6 +19,7 @@ def test_cnn2(epochs):
     from cnn2.cnn2 import make_model, train
     # Fetch 'gtsrb' dataset and prepare data
     data = fetch_data("data/gtsrb_full")
+    data = data_augmentation(data)
 
     # Make and compile Neural Network model
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
