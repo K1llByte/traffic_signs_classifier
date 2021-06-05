@@ -11,7 +11,7 @@ def test_cnn1(epochs):
     #model.summary()
 
     # Load a pretrained model if it exists
-    model = train(model, data, model_file=f'models/cnn1_{epochs}epochs', num_epochs=epochs, evalu=False)
+    model = train(model, data, model_file=f'models/cnn1_{epochs}epochs', num_epochs=epochs)
 
     return model
 
@@ -27,7 +27,7 @@ def test_cnn2(epochs):
     #model.summary()
 
     # Load a pretrained model if it exists
-    model = train(model, data, model_file=f'models/cnn2_{epochs}epochs', num_epochs=epochs, evalu=False)
+    model = train(model, data, model_file=f'models/cnn2_{epochs}epochs', num_epochs=epochs)
 
     return model
 
@@ -46,7 +46,7 @@ def test_cnn3(epochs):
     #model.summary()
 
     # Load a pretrained model if it exists
-    model = train(model, data, model_file=f'models/cnn3_{epochs}epochs', num_epochs=epochs, evalu=False)
+    model = train(model, data, model_file=f'models/cnn3_{epochs}epochs', num_epochs=epochs)
 
     return model
 
