@@ -5,9 +5,12 @@ from tensorflow.keras.regularizers import l2
 import tensorflow.keras.layers as kl
 import tensorflow as tf
 import os
+import math
 
 BATCH_SIZE = 32
 IMAGE_SIZE = 32
+
+
 
 #################################### Model ####################################
 
@@ -19,6 +22,7 @@ def make_model(class_count, img_size, channels=3):
     eps = 1e-6
 
     input_ = kl.Input(shape=(img_size,img_size,channels), name='data')
+    
     # 1 Part
     x = kl.Conv2D(filters=1, kernel_size=(1,1), padding='same',
             kernel_regularizer=l2(l2_reg_rate))(input_)
@@ -30,6 +34,7 @@ def make_model(class_count, img_size, channels=3):
     x = kl.BatchNormalization(epsilon=eps)(x)
     x = kl.ReLU()(x)
     x = kl.MaxPooling2D(pool_size=3, strides=2)(x)
+    
     # 3 Part
     x = kl.Conv2D(filters=59, kernel_size=(3,3), padding='same',
             kernel_regularizer=l2(l2_reg_rate))(x)
@@ -42,6 +47,7 @@ def make_model(class_count, img_size, channels=3):
     x = kl.BatchNormalization(epsilon=eps)(x)
     x = kl.ReLU()(x)
     x = kl.MaxPooling2D(pool_size=3, strides=2)(x)
+    
     # 5 Part
     x = kl.Flatten()(x)
     x = kl.Dense(300, kernel_regularizer=l2(l2_reg_rate))(x)
@@ -60,23 +66,28 @@ def make_model(class_count, img_size, channels=3):
         metrics=['categorical_accuracy'])
     return model
 
-def train(in_model, data, model_file='models/cnn2'):
+def train(in_model, data, model_file='models/cnn2',num_epochs=20):
     train_set, val_set, test_set, dataset_length = data
+    steps = math.ceil(dataset_length * 0.3)/BATCH_SIZE
     if not os.path.exists(model_file):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
                     steps_per_epoch=dataset_length/BATCH_SIZE,
-                    epochs=20,
+                    epochs=num_epochs,
                     validation_data=val_set, 
-                    validation_steps=2580/BATCH_SIZE)
+                    validation_steps=steps)
         print("[INFO] Training Finished")
 
-        eval_model = in_model.evaluate(test_set, verbose=1)
-        print(eval_model)
+        values = in_model.evaluate(test_set, verbose=1)
+        for metric, val in zip(in_model.metrics_names,values):
+            print(f'{metric}: {val}')
         in_model.save(model_file)
         
     else:
         in_model = tf.keras.models.load_model(model_file)
         print("[INFO] Loaded Trained Model")
-        in_model.evaluate(test_set, verbose=1)
+        print("Test Set:")
+        values = in_model.evaluate(test_set, verbose=1)
+        for metric, val in zip(in_model.metrics_names,values):
+            print(f'{metric}: {val}')
     return in_model

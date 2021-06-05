@@ -8,6 +8,7 @@ from tensorflow.keras.layers import LeakyReLU, BatchNormalization, Conv2D, MaxPo
 
 import os
 import pathlib
+import math
 import numpy as np
 import matplotlib.pyplot as plt
 
@@ -92,9 +93,40 @@ def fetch_data(path="data/gtsrb_full"):
     test_set = test_set.batch(batch_size = BATCH_SIZE)
 
 
-    testset_length = [i for i,_ in enumerate(test_set)][-1] + 1
-    #print('Number of batches: ', testset_length)
+    # testset_length = [i for i,_ in enumerate(test_set)][-1] + 1
+    # print('Number of batches: ', testset_length)
+
     return train_set, val_set, test_set, trainset_length
+
+
+# def process_image_trans(image, label):
+    
+#     rx = tf.random.uniform(shape=(), minval=0, maxval=20) - 10
+#     ry = tf.random.uniform(shape=(), minval=0, maxval=8) - 4
+#     image = tfa.image.translate(image, [rx, ry])
+
+#     return image, label
+
+# def process_image_rot(image, label):
+    
+#     r = tf.random.uniform(shape=(), minval=0, maxval=0.5, dtype=tf.dtypes.float32) - 0.25
+#     image = tfa.image.rotate(image, r)
+#     image = tf.clip_by_value(tfa.image.random_hsv_in_yiq(image, 0.0, 0.4, 1.1, 0.4, 1.1), 0.0, 1.0)
+
+#     #image = tf.clip_by_value(tf.image.adjust_brightness(image, tf.random.uniform(shape=(), minval=0, maxval=0.1)-0.2),0,1)
+#     return image, label
+
+
+# def data_augmentation(data):
+#     datasetA = listset.map(get_bytes_and_label, num_parallel_calls=AUTOTUNE)
+#     datasetA = datasetA.prefetch(buffer_size=AUTOTUNE)
+#     datasetB = datasetA.map(process_image_trans)
+#     datasetB = datasetB.concatenate(datasetA.map(process_image_rot))
+    
+#     datasetB = datasetB.shuffle(20)
+#     datasetB = datasetB.batch(batch_size = BATCH_SIZE)
+#     datasetB = datasetB.repeat()
+
 
 #################################### Model ####################################
 
@@ -134,25 +166,30 @@ def make_model(class_count, img_size, channels=3):
 
 ################################# Train Model #################################
 
-def train(in_model, data, model_file='models/cnn1'):
-    train_set, val_set, test_set, trainset_length = data
+def train(in_model, data, model_file='models/cnn1',num_epochs=20):
+    train_set, val_set, test_set, dataset_length = data
+    steps = math.ceil(dataset_length * 0.3)/BATCH_SIZE
     if not os.path.exists(model_file):
         print("[INFO] Training Model ...")
         in_model.fit(train_set,
-                    steps_per_epoch=trainset_length/BATCH_SIZE,
-                    epochs=20,
+                    steps_per_epoch=dataset_length/BATCH_SIZE,
+                    epochs=num_epochs,
                     validation_data=val_set, 
-                    validation_steps=2580/BATCH_SIZE)
+                    validation_steps=steps)
         print("[INFO] Training Finished")
 
-        eval_model = in_model.evaluate(test_set, verbose=1)
-        print(eval_model)
+        values = in_model.evaluate(test_set, verbose=1)
+        for metric, val in zip(in_model.metrics_names,values):
+            print(f'{metric}: {val}')
         in_model.save(model_file)
         
     else:
         in_model = tf.keras.models.load_model(model_file)
         print("[INFO] Loaded Trained Model")
-        in_model.evaluate(test_set, verbose=1)
+        print("Test Set:")
+        values = in_model.evaluate(test_set, verbose=1)
+        for metric, val in zip(in_model.metrics_names,values):
+            print(f'{metric}: {val}')
     return in_model
 
 ###############################################################################
