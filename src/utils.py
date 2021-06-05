@@ -1,6 +1,13 @@
+import numpy as np
+import matplotlib.pyplot as plt
+import os
+from PIL import Image
+
 BATCH_SIZE = 32
 IMAGE_SIZE = 32
-class_ids = np.array(['00000','00001', '00002', '00003', '00004', '00005', '00006', '00007'])
+class_ids = np.array(os.listdir('data/gtsrb_full/train_images'))
+class_names = class_ids
+NUM_CLASSES = len(class_ids)
 
 
 def show_batch(cols, image_batch, label_batch):
@@ -136,3 +143,22 @@ def plot_predictions(predictions, ground_truth, images, num_rows= 5, num_cols=3 
         plot_value_array(i, predictions[i], ground_truth)
     plt.tight_layout()
     plt.show()
+
+
+
+def load_and_predict(in_model, imgs_path):
+    imgs = []
+    filenames = [ os.path.basename(p) for p in imgs_path]
+
+    for img_path in imgs_path:
+        img = Image.open(img_path).resize((IMAGE_SIZE,IMAGE_SIZE))
+        # Expand to include batch info
+        #numpy_image = np.expand_dims(np.asarray(img), axis=0)
+        imgs.append(np.asarray(img))
+
+        #filenames.append(os.path.basename(img_path))
+        
+    preds = in_model.predict(np.asarray(imgs))
+    preds = [ class_names[np.argmax(p)] for p in preds ]
+
+    return list(zip(preds,filenames))

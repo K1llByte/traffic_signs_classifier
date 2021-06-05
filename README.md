@@ -52,3 +52,23 @@ The code will be organized as a script with functionalities grouped by:
 | cnn2 | 72     | 95.36%   | no          |
 | cnn3 | 20     | 95.49%   | no          |
 | cnn3 | 50     | 95.29%   | no          |
+
+
+<!--
+- Introdução
+    - Objectivo
+    - Resumo das aproches
+- Estrutura do projeto
+    - (de modo a fornecer modularidade e reutilizar componentes desenvolvidas bla bla bla)
+- Redes
+    - Convolutional Neural Network 1
+        - (Dizer que foi a nossa primeira aproach e que experimentamos com variações)
+    - Convolutional Neural Network 2
+        - (Mencionar que foi um bom recurso para entender de que forma se pode desenvolver redes para este dataset/tópico)
+    - Convolutional Neural Network 3
+        - (Dizer que nos sentimos inspirados para desenvolver uma rede nossa que fosse trazer resultados mais fiaveis)
+    - Results
+        - Nosso caso de ouro (limit 50)
+        - (Notar que afinal somos uns falhados e que a rede do stor não só dá melhor accuracy como também consegue identificar corretamente o nosso caso de ouro)
+- Conclusão
+-->

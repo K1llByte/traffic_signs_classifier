@@ -5,6 +5,7 @@ from tensorflow.keras.models import Sequential, model_from_json
 from tensorflow.keras.optimizers import SGD, Adam
 from tensorflow.keras.callbacks import LearningRateScheduler, ModelCheckpoint
 from tensorflow.keras.layers import LeakyReLU, BatchNormalization, Conv2D, MaxPooling2D, Dense, Activation, Flatten, Dropout
+import tensorflow_addons as tfa
 
 import os
 import pathlib
@@ -99,33 +100,58 @@ def fetch_data(path="data/gtsrb_full"):
     return train_set, val_set, test_set, trainset_length
 
 
-# def process_image_trans(image, label):
+
+# Brightness
+def process_image_brightness(image, label):
+    image = tf.clip_by_value(tf.image.random_brightness(image, max_delta = 0.25), 0, 1)
+    return image, label 
+
+
+# Contrast
+def process_image_contrast(image, label):
+    image = tf.clip_by_value(tf.image.random_contrast(image, lower=0.7, upper=1.3, seed=None), 0, 1)
+    return image
+
+# Saturation
+def process_image_saturation(image, label):
+    image = tf.image.random_saturation(image, lower=0.6, upper= 1.4, seed=None)
+    return image
+
+
+# Contrast
+def process_image_translate(image, label):
+    rx = tf.random.uniform(shape=(), minval=-10, maxval=10)
+    ry = tf.random.uniform(shape=(), minval=-4, maxval=4) - 4
+    image = tfa.image.translate(image, [rx, ry])
+    return image, label
+
+# Saturation
+def process_image_rotate(image, label):
+    r = tf.random.uniform(shape=(), minval=0, maxval=0.5) - 0.25
+    image = tfa.image.rotate(image, r)
+    #image = tf.clip_by_value(tfa.image.random_hsv_in_yiq(image, 0.0, 0.4, 1.1, 0.4, 1.1), 0.0, 1.0)
+    #image = tf.clip_by_value(tf.image.adjust_brightness(image, tf.random.uniform(shape=(), minval=0, maxval=0.1)-0.2),0,1)
+    return image, label
+
+
+def data_augmentation(data):
+    def apply_all(image, label):
+        image, label = process_image_brightness(image, label)
+        image, label = process_image_contrast(image, label)
+        image, label = process_image_saturation(image, label)
+        image, label = process_image_translate(image, label)
+        image, label = process_image_rotate(image, label)
+        return image, label
+
+    train_set, val_set, test_set, dataset_length = data
+
+    new_train_set = train_set.map(process_image_translate)
+    new_train_set = new_train_set.concatenate(train_set.map(apply_all))
     
-#     rx = tf.random.uniform(shape=(), minval=0, maxval=20) - 10
-#     ry = tf.random.uniform(shape=(), minval=0, maxval=8) - 4
-#     image = tfa.image.translate(image, [rx, ry])
-
-#     return image, label
-
-# def process_image_rot(image, label):
-    
-#     r = tf.random.uniform(shape=(), minval=0, maxval=0.5, dtype=tf.dtypes.float32) - 0.25
-#     image = tfa.image.rotate(image, r)
-#     image = tf.clip_by_value(tfa.image.random_hsv_in_yiq(image, 0.0, 0.4, 1.1, 0.4, 1.1), 0.0, 1.0)
-
-#     #image = tf.clip_by_value(tf.image.adjust_brightness(image, tf.random.uniform(shape=(), minval=0, maxval=0.1)-0.2),0,1)
-#     return image, label
-
-
-# def data_augmentation(data):
-#     datasetA = listset.map(get_bytes_and_label, num_parallel_calls=AUTOTUNE)
-#     datasetA = datasetA.prefetch(buffer_size=AUTOTUNE)
-#     datasetB = datasetA.map(process_image_trans)
-#     datasetB = datasetB.concatenate(datasetA.map(process_image_rot))
-    
-#     datasetB = datasetB.shuffle(20)
-#     datasetB = datasetB.batch(batch_size = BATCH_SIZE)
-#     datasetB = datasetB.repeat()
+    new_train_set = new_train_set.shuffle(20)
+    new_train_set = new_train_set.batch(batch_size=BATCH_SIZE)
+    new_train_set = new_train_set.repeat()
+    return new_train_set, val_set, test_set, dataset_length*2 
 
 
 #################################### Model ####################################
@@ -166,7 +192,7 @@ def make_model(class_count, img_size, channels=3):
 
 ################################# Train Model #################################
 
-def train(in_model, data, model_file='models/cnn1',num_epochs=20):
+def train(in_model, data, model_file='models/cnn1',num_epochs=20, evalu=True):
     train_set, val_set, test_set, dataset_length = data
     steps = math.ceil(dataset_length * 0.3)/BATCH_SIZE
     if not os.path.exists(model_file):
@@ -179,28 +205,22 @@ def train(in_model, data, model_file='models/cnn1',num_epochs=20):
         print("[INFO] Training Finished")
 
         values = in_model.evaluate(test_set, verbose=1)
-        for metric, val in zip(in_model.metrics_names,values):
-            print(f'{metric}: {val}')
+        if evalu:
+            print("Test Set:")
+            values = in_model.evaluate(test_set, verbose=1)
+            for metric, val in zip(in_model.metrics_names,values):
+                print(f'{metric}: {val}')
         in_model.save(model_file)
         
     else:
         in_model = tf.keras.models.load_model(model_file)
         print("[INFO] Loaded Trained Model")
-        print("Test Set:")
-        values = in_model.evaluate(test_set, verbose=1)
-        for metric, val in zip(in_model.metrics_names,values):
-            print(f'{metric}: {val}')
+        if evalu:
+            print("Test Set:")
+            values = in_model.evaluate(test_set, verbose=1)
+            for metric, val in zip(in_model.metrics_names,values):
+                print(f'{metric}: {val}')
     return in_model
 
 ###############################################################################
 
-def load_and_predict(in_model, img_path):
-    img = Image.open(img_path).resize((IMAGE_SIZE,IMAGE_SIZE))
-    numpy_image = np.asarray(img)
-
-    # Expand to include batch info
-    numpy_image = np.expand_dims(numpy_image, axis=0)
-
-    # Predict
-    pred = in_model.predict(numpy_image)
-    return class_names[np.argmax(pred[0])]
