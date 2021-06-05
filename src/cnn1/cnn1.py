@@ -52,7 +52,40 @@ def get_bytes_and_label(file_path):
 
 ################################### Dataset ###################################
 
-def fetch_data(path="data/gtsrb_full"):
+# Brightness
+def process_image_brightness(image, label):
+    image = tf.clip_by_value(tf.image.random_brightness(image, max_delta = 0.25), 0, 1)
+    return image, label
+
+
+# Contrast
+def process_image_contrast(image, label):
+    image = tf.clip_by_value(tf.image.random_contrast(image, lower=0.7, upper=1.3, seed=None), 0, 1)
+    return image, label
+
+# Saturation
+def process_image_saturation(image, label):
+    image = tf.image.random_saturation(image, lower=0.6, upper= 1.4, seed=None)
+    return image, label
+
+
+# Contrast
+def process_image_translate(image, label):
+    rx = tf.random.uniform(shape=(), minval=-10, maxval=10)
+    ry = tf.random.uniform(shape=(), minval=-4, maxval=4) - 4
+    image = tfa.image.translate(image, [rx, ry])
+    return image, label
+
+# Saturation
+def process_image_rotate(image, label):
+    r = tf.random.uniform(shape=(), minval=0, maxval=0.5) - 0.25
+    image = tfa.image.rotate(image, r)
+    #image = tf.clip_by_value(tfa.image.random_hsv_in_yiq(image, 0.0, 0.4, 1.1, 0.4, 1.1), 0.0, 1.0)
+    #image = tf.clip_by_value(tf.image.adjust_brightness(image, tf.random.uniform(shape=(), minval=0, maxval=0.1)-0.2),0,1)
+    return image, label
+
+
+def fetch_data(path="data/gtsrb_full", data_augmentation=False):
 
     ################################ Load Dataset ##################################
 
@@ -62,22 +95,48 @@ def fetch_data(path="data/gtsrb_full"):
     AUTOTUNE = tf.data.experimental.AUTOTUNE
 
     train_listset = tf.data.Dataset.list_files(f"{path}train_images/*/*.png")
-    train_set = train_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
+    train_set = train_listset.map(get_bytes_and_label, num_parallel_calls=AUTOTUNE)
 
     val_listset = tf.data.Dataset.list_files(f"{path}val_images/*/*.png")
-    val_set = val_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
+    val_set = val_listset.map(get_bytes_and_label, num_parallel_calls=AUTOTUNE)
 
     test_listset = tf.data.Dataset.list_files(f"{path}test_images/*/*.png")
-    test_set = test_listset.map(get_bytes_and_label, num_parallel_calls = AUTOTUNE)
+    test_set = test_listset.map(get_bytes_and_label, num_parallel_calls=AUTOTUNE)
 
-    tmp = [i for i,_ in enumerate(train_set)]
-    trainset_length = tmp[-1] + 1
+    #tmp = [i for i,_ in enumerate(train_set)]
+    #trainset_length = tmp[-1] + 1
     # trainset_length = [i for i,_ in enumerate(train_set)][-1] + 1
 
     ############################### Prepare Dataset ################################
 
+    #train_set_len = tf.data.experimental.cardinality(train_set).numpy()
+
+    if data_augmentation:
+        def apply_all(image, label):
+            image, label = process_image_brightness(image, label)
+            image, label = process_image_contrast(image, label)
+            image, label = process_image_saturation(image, label)
+            image, label = process_image_translate(image, label)
+            image, label = process_image_rotate(image, label)
+            return image, label
+
+        # SHHHHH ninguem precisas de saber a forma 
+        # como estamos a fazer uma cópia disto
+        # new_train_set = train_set.shuffle(buffer_size=1)
+
+        # for image, label in new_train_set:
+        #     image, label = apply_all(image, label)
+        
+        # train_set = train_set.prefetch(buffer_size=AUTOTUNE)
+        new_train_set = train_set.map(apply_all)
+        train_set = train_set.concatenate(new_train_set)
+
+
+
     train_set_len = tf.data.experimental.cardinality(train_set).numpy()
     val_set_len = tf.data.experimental.cardinality(val_set).numpy()
+    train_set_len = tf.data.experimental.cardinality(train_set).numpy()
+
     
     train_set = train_set.cache()
     train_set = train_set.shuffle(buffer_size=train_set_len)
@@ -97,62 +156,7 @@ def fetch_data(path="data/gtsrb_full"):
     # testset_length = [i for i,_ in enumerate(test_set)][-1] + 1
     # print('Number of batches: ', testset_length)
 
-    return train_set, val_set, test_set, trainset_length
-
-
-
-# Brightness
-def process_image_brightness(image, label):
-    image = tf.clip_by_value(tf.image.random_brightness(image, max_delta = 0.25), 0, 1)
-    return image, label 
-
-
-# Contrast
-def process_image_contrast(image, label):
-    image = tf.clip_by_value(tf.image.random_contrast(image, lower=0.7, upper=1.3, seed=None), 0, 1)
-    return image
-
-# Saturation
-def process_image_saturation(image, label):
-    image = tf.image.random_saturation(image, lower=0.6, upper= 1.4, seed=None)
-    return image
-
-
-# Contrast
-def process_image_translate(image, label):
-    rx = tf.random.uniform(shape=(), minval=-10, maxval=10)
-    ry = tf.random.uniform(shape=(), minval=-4, maxval=4) - 4
-    image = tfa.image.translate(image, [rx, ry])
-    return image, label
-
-# Saturation
-def process_image_rotate(image, label):
-    r = tf.random.uniform(shape=(), minval=0, maxval=0.5) - 0.25
-    image = tfa.image.rotate(image, r)
-    #image = tf.clip_by_value(tfa.image.random_hsv_in_yiq(image, 0.0, 0.4, 1.1, 0.4, 1.1), 0.0, 1.0)
-    #image = tf.clip_by_value(tf.image.adjust_brightness(image, tf.random.uniform(shape=(), minval=0, maxval=0.1)-0.2),0,1)
-    return image, label
-
-
-def data_augmentation(data):
-    def apply_all(image, label):
-        image, label = process_image_brightness(image, label)
-        image, label = process_image_contrast(image, label)
-        image, label = process_image_saturation(image, label)
-        image, label = process_image_translate(image, label)
-        image, label = process_image_rotate(image, label)
-        return image, label
-
-    train_set, val_set, test_set, dataset_length = data
-
-    new_train_set = train_set.map(process_image_translate)
-    new_train_set = new_train_set.concatenate(train_set.map(apply_all))
-    
-    new_train_set = new_train_set.shuffle(20)
-    new_train_set = new_train_set.batch(batch_size=BATCH_SIZE)
-    new_train_set = new_train_set.repeat()
-    return new_train_set, val_set, test_set, dataset_length*2 
-
+    return train_set, val_set, test_set, train_set_len
 
 #################################### Model ####################################
 

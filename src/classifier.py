@@ -4,7 +4,7 @@ from utils import load_and_predict
 def test_cnn1(epochs):
     from cnn1.cnn1 import make_model, train
     # Fetch 'gtsrb' dataset and prepare data
-    data = fetch_data("data/gtsrb_full")
+    data = fetch_data("data/gtsrb_full",data_augmentation=True)
 
     # Make and compile Neural Network model
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
@@ -18,9 +18,9 @@ def test_cnn1(epochs):
 def test_cnn2(epochs):
     from cnn2.cnn2 import make_model, train
     # Fetch 'gtsrb' dataset and prepare data
-    data = fetch_data("data/gtsrb_full")
-    from cnn1.cnn1 import data_augmentation
-    data = data_augmentation(data)
+    data = fetch_data("data/gtsrb_full",data_augmentation=True)
+    # from cnn1.cnn1 import data_augmentation
+    # data = data_augmentation(data)
 
     # Make and compile Neural Network model
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
@@ -34,11 +34,11 @@ def test_cnn2(epochs):
 def test_cnn3(epochs):
     from cnn3.cnn3 import make_model
     from cnn2.cnn2 import train
-    from cnn1.cnn1 import data_augmentation
+    # from cnn1.cnn1 import data_augmentation
 
     # Fetch 'gtsrb' dataset and prepare data
-    data = fetch_data("data/gtsrb_full")
-    data = data_augmentation(data)
+    data = fetch_data("data/gtsrb_full",data_augmentation=True)
+    # data = data_augmentation(data)
 
 
     # Make and compile Neural Network model
