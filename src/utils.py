@@ -3,11 +3,12 @@ import matplotlib.pyplot as plt
 import os
 from PIL import Image
 
-BATCH_SIZE = 32
-IMAGE_SIZE = 32
-class_ids = np.array(os.listdir('data/gtsrb_full/train_images'))
-class_names = class_ids
-NUM_CLASSES = len(class_ids)
+from cnn1.cnn1 import BATCH_SIZE, IMAGE_SIZE, class_ids, class_names
+
+#BATCH_SIZE = 32
+#IMAGE_SIZE = 32
+#class_ids = np.array(os.listdir('data/gtsrb_full/train_images'))
+#class_names = class_ids
 
 
 def show_batch(cols, image_batch, label_batch):

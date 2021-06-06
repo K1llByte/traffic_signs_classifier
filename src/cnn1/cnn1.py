@@ -20,7 +20,7 @@ BATCH_SIZE = 32
 IMAGE_SIZE = 32
 #class_ids = np.array(['00000','00001', '00002', '00003', '00004', '00005', '00006', '00007'])
 #class_names = ['Limit 20', 'Limit 30', 'Limit 51', 'Limit 60', 'Limit 70', 'Limit 80', 'Limit 100', 'Limit 120']
-class_ids = np.array(os.listdir('data/gtsrb_full/train_images'))
+class_ids = np.array(os.listdir(f"data/gtsrb_full/train_images"))
 class_names = class_ids
 NUM_CLASSES = len(class_ids)
 
@@ -189,7 +189,7 @@ def make_model(class_count, img_size, channels=3):
     model.add(Dense(class_count, activation='softmax'))
 
     model.compile(
-        optimizer=Adam(lr=0.0001), 
+        optimizer=Adam(lr=0.0001),
         loss='categorical_crossentropy',
         metrics=['accuracy'])
     return model

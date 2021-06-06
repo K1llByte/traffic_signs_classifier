@@ -10,7 +10,7 @@ def test_cnn1(epochs):
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
     #model.summary()
 
-    # Load a pretrained model if it exists
+    # Train or load a pretrained model if it exists
     model = train(model, data, model_file=f'models/cnn1_{epochs}epochs', num_epochs=epochs)
 
     return model
@@ -26,7 +26,7 @@ def test_cnn2(epochs):
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
     #model.summary()
 
-    # Load a pretrained model if it exists
+    # Train or load a pretrained model if it exists
     model = train(model, data, model_file=f'models/cnn2_{epochs}epochs', num_epochs=epochs)
 
     return model
@@ -45,14 +45,14 @@ def test_cnn3(epochs):
     model = make_model(NUM_CLASSES, IMAGE_SIZE)
     #model.summary()
 
-    # Load a pretrained model if it exists
+    # Train or load a pretrained model if it exists
     model = train(model, data, model_file=f'models/cnn3_{epochs}epochs', num_epochs=epochs)
 
     return model
 
 #model = test_cnn1(epochs=19)
-model = test_cnn2(epochs=72)
-#model = test_cnn3(epochs=20)
+#model = test_cnn2(epochs=10)
+model = test_cnn3(epochs=100)
 
 import os
 to_predict = [ f'data/gold_tests/{f}' for f in os.listdir('data/gold_tests')]
