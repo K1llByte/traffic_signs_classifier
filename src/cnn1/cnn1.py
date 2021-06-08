@@ -57,7 +57,6 @@ def process_image_brightness(image, label):
     image = tf.clip_by_value(tf.image.random_brightness(image, max_delta = 0.25), 0, 1)
     return image, label
 
-
 # Contrast
 def process_image_contrast(image, label):
     image = tf.clip_by_value(tf.image.random_contrast(image, lower=0.7, upper=1.3, seed=None), 0, 1)
@@ -68,15 +67,14 @@ def process_image_saturation(image, label):
     image = tf.image.random_saturation(image, lower=0.6, upper= 1.4, seed=None)
     return image, label
 
-
-# Contrast
+# Translação
 def process_image_translate(image, label):
     rx = tf.random.uniform(shape=(), minval=-10, maxval=10)
     ry = tf.random.uniform(shape=(), minval=-4, maxval=4) - 4
     image = tfa.image.translate(image, [rx, ry])
     return image, label
 
-# Saturation
+# Rotação
 def process_image_rotate(image, label):
     r = tf.random.uniform(shape=(), minval=0, maxval=0.5) - 0.25
     image = tfa.image.rotate(image, r)
