@@ -8,7 +8,8 @@ import tensorflow as tf
 import os
 import math
 
-BATCH_SIZE = 32
+#BATCH_SIZE = 32
+BATCH_SIZE = 50
 IMAGE_SIZE = 32
 
 
@@ -18,7 +19,6 @@ IMAGE_SIZE = 32
 ################################ Define Model #################################
 
 def make_model(class_count, img_size, channels=3):
-    lr = 0.0007
 
     model = Sequential()
 
@@ -51,7 +51,7 @@ def make_model(class_count, img_size, channels=3):
     model.add(Softmax())
 
 
-    opt = SGD(learning_rate=lr, momentum=0.9, nesterov=True)
+    opt = SGD(learning_rate=0.0007, momentum=0.9, nesterov=True)
 
     model.compile(optimizer=opt,
         loss='categorical_crossentropy',

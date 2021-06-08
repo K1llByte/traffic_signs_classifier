@@ -165,9 +165,7 @@ def fetch_data(path="data/gtsrb_full", data_augmentation=False):
 def make_model(class_count, img_size, channels=3):
     model = Sequential()
     
-    model.add(Conv2D(64, (5, 5), 
-                     input_shape=(img_size, img_size, channels)
-                     ))
+    model.add(Conv2D(64, (5, 5), input_shape=(img_size, img_size, channels)))
     model.add(BatchNormalization())
     model.add(LeakyReLU(alpha=0.01))
     

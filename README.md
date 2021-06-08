@@ -45,13 +45,14 @@ The code will be organized as a script with functionalities grouped by:
 
 ## Results
 
-| Net  | Epochs | Accuracy | Predicts 50 |
-|:----:|:------:|:--------:|:-----------:|
-| cnn1 | 20     | 97.32%   | yes         |
-| cnn2 | 50     | 93.42%   | no          |
-| cnn2 | 72     | 95.36%   | no          |
-| cnn3 | 20     | 95.49%   | no          |
-| cnn3 | 50     | 95.29%   | no          |
+| Net       | Epochs | Accuracy | Predicts 50 |
+|:---------:|:------:|:--------:|:-----------:|
+| cnn1      | 20     | 97.32%   | yes         |
+| cnn2      | 50     | 93.42%   | no          |
+| cnn2      | 72     | 95.36%   | no          |
+| cnn2 (DA) | 150    | 94.89%   | no          |
+| cnn3      | 20     | 95.49%   | no          |
+| cnn3      | 50     | 95.29%   | no          |
 
 
 <!--

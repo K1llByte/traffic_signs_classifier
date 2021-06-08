@@ -30,8 +30,8 @@ def show_batch(cols, image_batch, label_batch):
 
     fig.tight_layout()    
     plt.show()
-    
-    
+
+
 def show_history(history):
     print(history.history.keys())
 
